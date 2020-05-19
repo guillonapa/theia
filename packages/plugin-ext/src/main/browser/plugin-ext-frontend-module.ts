@@ -20,9 +20,9 @@ import '../../../src/main/browser/style/index.css';
 import { ContainerModule } from 'inversify';
 import {
     FrontendApplicationContribution, WidgetFactory, bindViewContribution,
-    ViewContainerIdentifier, ViewContainer, createTreeContainer, TreeImpl, TreeWidget, TreeModelImpl, LabelProviderContribution
+    ViewContainerIdentifier, ViewContainer, createTreeContainer, TreeImpl, TreeWidget, TreeModelImpl, LabelProviderContribution, /* Endpoint */
 } from '@theia/core/lib/browser';
-import { MaybePromise, CommandContribution, ResourceResolver, bindContributionProvider } from '@theia/core/lib/common';
+import { MaybePromise, CommandContribution, ResourceResolver, bindContributionProvider, environment } from '@theia/core/lib/common';
 import { WebSocketConnectionProvider } from '@theia/core/lib/browser/messaging';
 import { HostedPluginSupport } from '../../hosted/browser/hosted-plugin';
 import { HostedPluginWatcher } from '../../hosted/browser/hosted-plugin-watcher';
@@ -70,6 +70,12 @@ import { WebviewResourceLoader, WebviewResourceLoaderPath } from '../common/webv
 import { WebviewResourceCache } from './webview/webview-resource-cache';
 import { PluginIconThemeService, PluginIconThemeFactory, PluginIconThemeDefinition, PluginIconTheme } from './plugin-icon-theme-service';
 import { PluginTreeViewNodeLabelProvider } from './view/plugin-tree-view-node-label-provider';
+import { ElectronSecurityToken } from '@theia/core/lib/electron-common/electron-token';
+
+let electronRemote: typeof import('electron').remote | undefined;
+if (environment.electron.is()) {
+    electronRemote = require('electron').remote;
+}
 
 export default new ContainerModule((bind, unbind, isBound, rebind) => {
 
@@ -170,7 +176,23 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
             if (endpoint[endpoint.length - 1] === '/') {
                 endpoint = endpoint.slice(0, endpoint.length - 1);
             }
-
+            if (typeof electronRemote !== 'undefined' && typeof electronRemote.session.defaultSession !== 'undefined') {
+                // Attach the ElectronSecurityToken to a cookie that will be sent with each webview request:
+                await new Promise((resolve, reject) => {
+                    electronRemote!.session.defaultSession!.cookies.set({
+                        url: endpoint,
+                        name: ElectronSecurityToken,
+                        value: JSON.stringify(container.get(ElectronSecurityToken)),
+                        httpOnly: true,
+                    }, error => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+            }
             const child = container.createChild();
             child.bind(WebviewWidgetIdentifier).toConstantValue(identifier);
             child.bind(WebviewWidgetExternalEndpoint).toConstantValue(endpoint);
