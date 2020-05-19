@@ -2,6 +2,7 @@
 
 In order to release one should:
 
+- update the release page
 - announce upcoming release
 - pre-publishing steps
 - login to the npm registry
@@ -10,6 +11,32 @@ In order to release one should:
 - reset local HEAD to match release commit
 - tag the published version
 - announce release is done
+
+## Updating the release page on Eclipse Foundation
+
+`One week` before the release, the project's release page should be updated in order to announce upcoming changes.
+- Login to eclipse: https://projects.eclipse.org/projects/ecd.theia
+- On the right side panel, select Release / Create a new release
+
+    Create a new version
+    - Name: enter the new version for this release. (ex: 1.2.0).
+    - Date: enter the date for this release.
+
+    Select the edit tab
+    - In "The Basic" section
+        - Select the  "Type A" in the IP Due Diligence type.
+    - In the "Project Plan"
+        - Deliverables section
+            - Add the following line pointing to the modifications where the end-user can have a look.
+
+            `[Changelog](https://github.com/eclipse-theia/theia/blob/master/CHANGELOG.md)`
+
+
+- When completing the edition, select "Save" at the bottom of the page.
+- To confirm the release is successful,
+    - Open the page https://projects.eclipse.org/projects/ecd.theia
+        - Select the version you just created.
+        - Open the Review plan section, you should see the data provided before.
 
 ## Announce upcoming release
 
